@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手續費設定 - 新增（多分頁）</title>
+<style>
+:root {
+  --primary: #1890ff;
+  --border: #d9d9d9;
+  --bg: #f0f2f5;
+  --card: #fff;
+  --label: #262626;
+  --hint: #8c8c8c;
+  --red: #ff4d4f;
+  --green: #52c41a;
+  --warn-bg: #fffbe6;
+  --warn-border: #ffe58f;
+  --warn-text: #614700;
+  --dis-bg: #f5f5f5;
+  --dis-color: #bfbfbf;
+  --r: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--label); font-size: 14px; }
+
+header { background: #fff; color: var(--label); padding: 0 24px; display: flex; align-items: center; height: 52px; gap: 16px; border-bottom: 3px solid var(--primary); box-shadow: 0 2px 8px rgba(24,144,255,.08); }
+.hdr-title { font-size: 15px; font-weight: 700; color: var(--primary); letter-spacing: .01em; }
+
+/* === Tab Bar === */
+.tab-bar-outer { background: #fff; display: flex; align-items: flex-end; padding: 8px 24px 0; gap: 3px; overflow-x: auto; flex-wrap: nowrap; border-bottom: 1px solid var(--border); }
+.tab-item { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #f5f7fa; color: var(--hint); border: 1px solid var(--border); border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; max-width: 200px; min-width: 70px; transition: all .15s; user-select: none; }
+.tab-item:hover:not(.active) { background: #e6f4ff; color: var(--primary); border-color: #91caff; }
+.tab-item.active { background: var(--bg); color: var(--primary); font-weight: 600; border-color: var(--primary); border-top: 2px solid var(--primary); padding-top: 8px; }
+.tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 40px; flex: 1; }
+.tab-x { background: none; border: none; cursor: pointer; color: inherit; opacity: .5; padding: 0; font-size: 13px; line-height: 1; flex-shrink: 0; }
+.tab-x:hover { opacity: 1; color: #ff4d4f; }
+.tab-add-btn { flex-shrink: 0; padding: 7px 12px; background: transparent; color: var(--primary); border: 1px dashed #91caff; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; white-space: nowrap; transition: all .15s; }
+.tab-add-btn:hover { background: #e6f4ff; border-color: var(--primary); }
+
+.container { max-width: 960px; margin: 20px auto; padding: 0 16px 80px; }
+
+.btn { padding: 7px 16px; border-radius: var(--r); border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 14px; transition: all .18s; font-family: inherit; }
+.btn:hover { border-color: var(--primary); color: var(--primary); }
+.btn-primary { background: var(--primary); color: #fff !important; border-color: var(--primary); }
+.btn-primary:hover { background: #40a9ff; border-color: #40a9ff; }
+.btn-blue { background: #1890ff; color: #fff !important; border-color: #1890ff; font-size: 13px; padding: 6px 14px; }
+.btn-blue:hover { background: #40a9ff; }
+.btn-danger { background: var(--red); color: #fff !important; border-color: var(--red); font-size: 13px; padding: 5px 12px; }
+.btn-danger:hover { background: #ff7875; }
+.saved-msg { color: var(--green); font-size: 13px; display: none; }
+
+.card { background: var(--card); border-radius: 8px; padding: 24px 28px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card-title { font-size: 15px; font-weight: 600; padding-bottom: 14px; margin-bottom: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.badge { font-size: 11px; font-weight: 400; color: var(--hint); border: 1px solid #e0e0e0; border-radius: 4px; padding: 1px 6px; }
+
+.field { display: grid; grid-template-columns: 220px 1fr; gap: 8px 16px; align-items: start; margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.flabel { font-weight: 500; padding-top: 7px; font-size: 13.5px; line-height: 1.4; }
+.req { color: var(--red); }
+.hint { font-size: 12px; color: var(--hint); margin-top: 4px; line-height: 1.5; }
+
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--r); font-size: 14px; font-family: inherit; color: var(--label); outline: none; transition: border-color .2s, box-shadow .2s; background: #fff;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(24,144,255,.12); }
+input:disabled, select:disabled, textarea:disabled {
+  background: var(--dis-bg) !important; color: var(--dis-color) !important; cursor: not-allowed; border-color: var(--border) !important; box-shadow: none !important;
+}
+textarea { resize: vertical; min-height: 70px; font-size: 13px; line-height: 1.5; }
+
+.opt { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; padding: 2px 0; font-size: 14px; }
+.opt input[type="radio"], .opt input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+.opt-disabled, .opt:has(input:disabled) { opacity: .45; cursor: not-allowed; pointer-events: none; }
+.rgroup, .cgroup { display: flex; flex-wrap: wrap; gap: 6px 20px; padding-top: 5px; }
+
+.date-out { font-size: 12px; color: var(--hint); margin-top: 4px; font-family: monospace; }
+
+.fee-row { display: flex; align-items: center; gap: 10px; }
+.fee-wrap { position: relative; flex: 1; }
+.fpfx { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--hint); pointer-events: none; }
+.fsfx { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--hint); pointer-events: none; }
+.fee-wrap input { padding-left: 22px; }
+.fee-wrap input.sfx { padding-right: 26px; }
+.fee-plus { color: var(--hint); font-size: 16px; }
+
+.rrow { display: flex; align-items: center; gap: 8px; }
+.rrow input { flex: 1; }
+.rlabel { color: var(--hint); white-space: nowrap; font-size: 13px; }
+
+.sub { margin-top: 10px; padding: 14px 16px; background: #fafafa; border: 1px solid #e8e8e8; border-radius: var(--r); }
+.sub .field { margin-bottom: 14px; }
+.sub .field:last-child { margin-bottom: 0; }
+
+.warn-box { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: var(--r); padding: 10px 14px; font-size: 13px; color: var(--warn-text); margin-bottom: 12px; }
+.warn-box > strong { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13.5px; }
+.warn-box ul { padding-left: 18px; }
+.warn-box li { margin-top: 3px; }
+
+.tag-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.tag-row input[type="text"] { flex: 1; }
+.tag-row select { width: 130px; flex-shrink: 0; }
+.tag-row .opt { white-space: nowrap; }
+.rmv-btn { background: none; border: none; cursor: pointer; color: var(--hint); font-size: 18px; padding: 0 4px; flex-shrink: 0; line-height: 1; transition: color .15s; }
+.rmv-btn:hover { color: var(--red); }
+
+.upload-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.upload-lbl { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; font-size: 13px; background: #fff; transition: all .18s; }
+.upload-lbl:hover { border-color: var(--primary); color: var(--primary); }
+
+.seg-radio { display: flex; gap: 0; border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); width: fit-content; margin-top: 5px; }
+.seg-radio label { padding: 5px 16px; cursor: pointer; font-size: 13px; border-right: 1px solid var(--border); user-select: none; background: #fafafa; }
+.seg-radio label:last-child { border-right: none; }
+.seg-radio input[type="radio"] { display: none; }
+.seg-radio label:has(input:checked) { background: #e6f4ff; color: var(--primary); font-weight: 600; }
+
+.fixed-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; gap: 10px; z-index: 200; box-shadow: 0 -2px 8px rgba(0,0,0,.1); flex-wrap: wrap; }
+input.has-error, textarea.has-error { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(255,77,79,.15) !important; }
+.rgroup.has-error, .seg-radio.has-error { outline: 1px solid var(--red); border-radius: var(--r); padding: 4px 8px; }
+.err-banner { color: var(--red); font-size: 12px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; }
+.modal-box { background: #fff; border-radius: 8px; padding: 24px 28px; max-width: 480px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+.modal-title { font-size: 15px; font-weight: 600; color: #d4380d; margin-bottom: 10px; }
+.modal-body { font-size: 14px; color: var(--label); margin-bottom: 14px; line-height: 1.6; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="hdr-title">手續費設定（Commission Fee Settings — Create）</span>
+  <span id="ver_badge" style="font-size:11px;color:#8c8c8c;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:10px;padding:2px 8px;margin-left:10px;vertical-align:middle;font-family:monospace"></span>
+</header>
+
+<div style="background:#fff;border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+  <span style="font-size:13px;font-weight:600;color:var(--label);white-space:nowrap">📅 批次調整日期</span>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span style="font-size:12px;color:var(--hint)">開始</span>
+    <input type="date" id="batch_start" style="height:30px;padding:0 8px;border:1px solid var(--border);border-radius:var(--r);font-size:13px">
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span style="font-size:12px;color:var(--hint)">結束</span>
+    <input type="date" id="batch_end" style="height:30px;padding:0 8px;border:1px solid var(--border);border-radius:var(--r);font-size:13px">
+  </div>
+  <button class="btn btn-primary" onclick="applyBatchDate('all')" style="height:30px;padding:0 14px;font-size:13px">套用至全部分頁</button>
+</div>
+
+<div class="tab-bar-outer" id="tab_bar_outer"></div>
+
+<div class="container">
+  <form id="theForm" autocomplete="off">
+
+    <!-- 1. Rule Basic Info -->
+    <div class="card">
+      <div class="card-title">規則基本資訊（Rule Basic Info）</div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>規則名稱（Rule Name）</div>
+        <div>
+          <input type="text" id="rule_name" placeholder="470357_shopee_tw_0%_20260101" oninput="onRuleNameInput()">
+          <div class="hint" style="margin-top:7px;line-height:2">
+            <strong>命名格式</strong><br>
+            · 依合約抽成：<span style="font-family:monospace;font-size:12px">【ShopID】_【名稱/專案】_【抽成%】_【合約開始日 YYYYMMDD】</span><br>
+            <span style="padding-left:1.2em">範例：<span style="font-family:monospace;font-size:12px">470357_shopee_tw_0%_20260101</span></span><br>
+            · 類別自提：<span style="font-family:monospace;font-size:12px">【seller type】_cmn_【活動區間】_【%數】</span><br>
+            <span style="padding-left:1.2em">範例：<span style="font-family:monospace;font-size:12px">mall_cmn_po_01010101_1.00　／　c2c_y26cmn_smt_01010101_2.00</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>開始時間（Start Period of the Rule）</div>
+        <div>
+          <input type="date" id="start_date" onchange="refreshDate('start')">
+          <div class="date-out" id="start_disp">—</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>結束時間（End Period of the Rule）</div>
+        <div>
+          <input type="date" id="end_date" onchange="refreshDate('end')">
+          <div class="date-out" id="end_disp">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Push Notification -->
+    <div class="card">
+      <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleCard('pn_body','pn_chevron')">
+        推播通知（Push Notification to Sellers）<span class="badge">選填</span>
+        <span id="pn_chevron" style="font-size:10px;margin-left:8px;color:var(--hint);float:right">▶ 展開</span>
+      </div>
+      <div id="pn_body" style="display:none">
+
+      <div class="field">
+        <div class="flabel">推播通知啟用（Push Notification to Sellers）</div>
+        <div>
+          <label class="opt">
+            <input type="checkbox" id="activate_pn">
+            當賣家新加入此規則時，啟用推播通知與自動回覆（Activate PN and AR）
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel">顯示名稱（Display Name to Seller）</div>
+        <div><input type="text" id="display_name" placeholder="e.g. Service Fee"></div>
+      </div>
+
+      <div class="field">
+        <div class="flabel">通知規則名稱（Rule Name in Notification Content）<span class="badge">選填</span></div>
+        <div><input type="text" id="pn_rule_name" placeholder="通知顯示的規則名稱"></div>
+      </div>
+
+      <div class="field">
+        <div class="flabel">導向連結（Redirect Link）<span class="badge">選填</span></div>
+        <div>
+          <input type="text" id="redirect_link" placeholder="https://seller.shopee.com.my/edu/article/...">
+          <div class="hint">If website is not Shopee, please indicate the full link in the textbox</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel">配額限制（Quota Subjected）</div>
+        <div>
+          <label class="opt">
+            <input type="checkbox" id="quota_chk" onchange="onQuotaChange(this.checked)">
+            勾選後，此規則將啟用配額檢查以決定資格（Quota Subjected）
+          </label>
+          <div class="sub" style="margin-top:10px">
+            <div class="rrow" style="margin-bottom:8px">
+              <label class="opt"><input type="radio" name="quota_mode" value="gte" id="q_mode_gte" disabled onchange="onQuotaModeChange()"> No. of Orders ≥</label>
+              <input type="number" id="quota_lower" min="0" step="1" placeholder="值" disabled style="max-width:150px">
+            </div>
+            <div class="rrow">
+              <label class="opt"><input type="radio" name="quota_mode" value="lte" id="q_mode_lte" disabled onchange="onQuotaModeChange()"> No. of Orders ≤</label>
+              <input type="number" id="quota_upper" min="0" step="1" placeholder="值" disabled style="max-width:150px">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      </div><!-- /pn_body -->
+    </div>
+
+    <!-- 3. Charging Info -->
+    <div class="card">
+      <div class="card-title">費用資訊（Charging Info）</div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>計費層級（Charging Level）</div>
+        <div class="rgroup">
+          <label class="opt"><input type="radio" name="charging_level" value="item_level" checked onchange="onChargingLevelChange()"> 單品層級（Item Level）</label>
+          <label class="opt"><input type="radio" name="charging_level" value="order_level" onchange="onChargingLevelChange()"> 訂單層級（Order Level）</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>新店家計費時間（New shop will start charging）</div>
+        <div class="rgroup">
+          <label class="opt"><input type="radio" name="new_shop_time" value="daily" checked> 每日（Daily）：從 00:00 開始計費</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>費用（Fees Charged）</div>
+        <div>
+          <div class="fee-row">
+            <div class="fee-wrap">
+              <span class="fpfx">$</span>
+              <input type="number" id="fixed_fee" min="0" step="0.01" placeholder="0.00" disabled>
+            </div>
+            <span class="fee-plus">+</span>
+            <div class="fee-wrap">
+              <input type="number" id="commission_rate" min="0" max="100" step="0.01" placeholder="0.00" class="sfx">
+              <span class="fsfx">%</span>
+            </div>
+          </div>
+          <div class="hint">固定金額、百分比，或兩者皆填</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel">單品費用上下限（Item level fees limit）</div>
+        <div>
+          <div class="rrow">
+            <span class="rlabel">Min</span>
+            <input type="number" id="item_fee_min" min="0" step="0.01" placeholder="0.00">
+            <span class="rlabel">~</span>
+            <span class="rlabel">Max</span>
+            <input type="number" id="item_fee_max" min="0" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel">訂單費用上下限（Order level fees limit）</div>
+        <div>
+          <div class="rrow">
+            <span class="rlabel">Min</span>
+            <input type="number" id="order_fee_min" min="0" step="0.01" placeholder="0.00" disabled>
+            <span class="rlabel">~</span>
+            <span class="rlabel">Max</span>
+            <input type="number" id="order_fee_max" min="0" step="0.01" placeholder="0.00" disabled>
+          </div>
+          <div class="hint">原系統不可填寫</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Order Eligibility -->
+    <div class="card">
+      <div class="card-title">訂單資格（Order Eligibility）</div>
+      <div class="field">
+        <div class="flabel">訂單金額範圍（Order Basket Size）</div>
+        <div>
+          <div class="rrow">
+            <span class="rlabel">Min</span>
+            <input type="number" id="basket_min" min="0" step="0.01" placeholder="0.00">
+            <span class="rlabel">~</span>
+            <span class="rlabel">Max</span>
+            <input type="number" id="basket_max" min="0" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Fulfilment Type -->
+    <div class="card">
+      <div class="card-title">物流類型（Fulfilment Type）</div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>篩選方式（Filter Type）</div>
+        <div>
+          <div class="seg-radio">
+            <label><input type="radio" name="fulfil_filter" value="checkout_logistics" checked onchange="onFulfilTypeSwitch()"><span>結帳物流渠道（Checkout Logistics Channel）</span></label>
+            <label><input type="radio" name="fulfil_filter" value="fulfilment_type" onchange="onFulfilTypeSwitch()"><span>物流類型（Fulfilment Type）</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div id="checkout_sub">
+        <div class="field">
+          <div class="flabel"><span class="req">* </span>Include / Exclude</div>
+          <div class="rgroup">
+            <label class="opt"><input type="radio" name="checkout_ie" value="include" checked> 包含（Include）</label>
+            <label class="opt"><input type="radio" name="checkout_ie" value="exclude"> 排除（Exclude）</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="flabel">物流渠道（Logistics Channels）</div>
+          <div>
+            <input type="text" id="checkout_channels" placeholder="All logistic channels" value="All logistic channels">
+            <div class="hint">預設 All logistic channels，可修改為特定 channel</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fulfil_sub" style="display:none">
+        <div class="field">
+          <div class="flabel">物流類型（Fulfilment Type）</div>
+          <div class="cgroup">
+            <label class="opt"><input type="checkbox" id="ft_local"> 賣家本地倉（Seller local WH）</label>
+            <label class="opt"><input type="checkbox" id="ft_overseas"> 賣家海外倉（Seller overseas WH）</label>
+            <label class="opt"><input type="checkbox" id="ft_shopee"> Shopee 倉（Shopee）</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Item Eligibility -->
+    <div class="card" id="item_elig_card">
+      <div class="card-title">商品資格（Item Eligibility）</div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>商品類型（Item Type）</div>
+        <div class="rgroup">
+          <label class="opt"><input type="radio" name="item_type" value="product_category" checked onchange="onItemTypeSwitch()"> 依商品分類（By Product Category）</label>
+          <label class="opt"><input type="radio" name="item_type" value="product_label_id" onchange="onItemTypeSwitch()"> 依商品標籤 ID（By Product Label ID）</label>
+        </div>
+      </div>
+
+      <div id="cat_sub">
+        <div class="field">
+          <div class="flabel"><span class="req">* </span>Include / Exclude</div>
+          <div class="rgroup">
+            <label class="opt"><input type="radio" name="cat_ie" value="include" checked> 包含（Include）</label>
+            <label class="opt"><input type="radio" name="cat_ie" value="exclude"> 排除（Exclude）</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="flabel">全域商品分類（GLOBAL Product Category）</div>
+          <div>
+            <input type="text" id="global_cat" value="all categories">
+            <div class="hint">預設 all categories；刪除後可輸入逗號分隔的分類 ID</div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="flabel">上傳全域商品分類（Upload Global Product Category）</div>
+          <div>
+            <div class="upload-row">
+              <label class="upload-lbl">
+                <input type="file" accept=".csv" style="display:none" onchange="parseCSVToField(this,'global_cat','cat_fname')">
+                ⬆ 上傳 CSV
+              </label>
+              <span id="cat_fname" style="font-size:12px;color:var(--hint)">未選擇檔案</span>
+              <button type="button" class="btn" onclick="downloadSampleCSV('category')" style="font-size:11px;padding:3px 10px">⬇ 範例檔</button>
+            </div>
+            <div class="hint" style="margin-top:5px">CSV 格式：A1 填入標題 <code>global_prodcat</code>，第二行起每行一個分類名稱。</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="label_sub" style="display:none">
+        <div class="field">
+          <div class="flabel"><span class="req">* </span>商品標籤層級（Product Label Level）</div>
+          <div class="rgroup">
+            <label class="opt"><input type="radio" name="label_level" value="item" checked> 單品層級（Item）</label>
+            <label class="opt"><input type="radio" name="label_level" value="model"> 規格層級（Model）</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="flabel"><span class="req">* </span>監控標籤變更（Monitor for Product Label Changes）</div>
+          <div>
+            <div class="rgroup">
+              <label class="opt"><input type="radio" name="monitor_label" value="no" checked> 否（No）</label>
+              </div>
+            <div class="hint" style="margin-top:4px">因系統更新時間非固定，現行僅能選 No</div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="flabel"><span class="req">* </span>標籤 ID（Label ID）</div>
+          <div><input type="text" id="label_id" placeholder="輸入 Label ID"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Shop Eligibility -->
+    <div class="card">
+      <div class="card-title">店家資格（Shop Eligibility）</div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>店家類型（Shop Category）</div>
+        <div>
+          <div class="seg-radio">
+            <label><input type="radio" name="shop_category" value="local_c2c"><span>本地 C2C（Local C2C）</span></label>
+            <label><input type="radio" name="shop_category" value="local_b2c"><span>本地 B2C（Local B2C）</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flabel"><span class="req">* </span>上傳店家方式（Upload Shop）</div>
+        <div class="rgroup">
+          <label class="opt"><input type="radio" name="shop_filter" value="shopid" checked onchange="onShopFilterSwitch()"> 依店家 ID（By ShopID）</label>
+          <label class="opt"><input type="radio" name="shop_filter" value="default_group" onchange="onShopFilterSwitch()"> 依預設群組（By Default Group）</label>
+          <label class="opt"><input type="radio" name="shop_filter" value="seller_tag" onchange="onShopFilterSwitch()"> 依賣家標籤（By Seller Tag）</label>
+        </div>
+      </div>
+
+      <div id="shopid_sub">
+        <div id="shopid_label_hint" style="display:none;background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;padding:8px 12px;font-size:12px;color:#874d00;margin-bottom:10px">
+          ⚠ 選用「By Product Label ID」時，系統固定使用 By ShopID，且<strong>無需填入任何店家 ID</strong>。
+        </div>
+        <div class="field">
+          <div class="flabel">上傳店家 ID（Upload Shop ID）</div>
+          <div>
+            <div class="upload-row">
+              <label class="upload-lbl">
+                <input type="file" accept=".csv" style="display:none" onchange="parseCSVToField(this,'shop_ids_text','shopid_fname')">
+                ⬆ 上傳 CSV
+              </label>
+              <span id="shopid_fname" style="font-size:12px;color:var(--hint)">未選擇檔案</span>
+              <button type="button" class="btn" onclick="downloadSampleCSV('shopid')" style="font-size:11px;padding:3px 10px">⬇ 範例檔</button>
+            </div>
+            <div class="hint" style="margin-top:5px">CSV 格式：A1 填入標題 <code>shopid</code>，第二行起每行一個 Shop ID。</div>
+            <div style="margin-top:8px">
+              <textarea id="shop_ids_text" placeholder="或直接貼上 Shop ID（每行一個或逗號分隔）"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="default_group_sub" style="display:none"></div>
+
+
+      <div id="seller_tag_sub" style="display:none">
+        <div class="field">
+          <div class="flabel">賣家標籤（Seller Tag）<span class="badge">最多 8 筆</span></div>
+          <div>
+            <div class="warn-box">
+              <strong>⚠ 注意事項（Warning）</strong>
+              若店家同時符合以下 2 個條件，即會被<u><strong>加入（added into）</strong></u>此規則：
+              <ul>
+                <li>a. 出現在<u><strong>所有（ALL）</strong></u>已<u><strong>包含（INCLUDED）</strong></u>的店家/賣家標籤中</li>
+                <li>b. 未出現在<u><strong>任何（ANY）</strong></u>已<u><strong>排除（EXCLUDED）</strong></u>的店家/賣家標籤中</li>
+              </ul>
+            </div>
+            <div id="seller_tag_rows"></div>
+            <button type="button" class="btn btn-blue" style="margin-top:8px" onclick="addSellerTag()">+ 新增賣家標籤（Add more Seller Tag）</button>
+            <div id="seller_tag_err" style="color:var(--red);font-size:12px;margin-top:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Shop Sales Criteria -->
+    <div class="card">
+      <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleCard('ssc_body','ssc_chevron')">
+        店家銷售條件（Shop Sales Criteria）<span class="badge">選填</span>
+        <span id="ssc_chevron" style="font-size:10px;margin-left:8px;color:var(--hint);float:right">▶ 展開</span>
+      </div>
+      <div id="ssc_body" style="display:none">
+      <div class="field">
+        <div class="flabel">訂單數量（Order Count）</div>
+        <div>
+          <div class="rrow" style="margin-bottom:8px">
+            <label class="opt"><input type="radio" name="oc_mode" value="gte" onchange="onOCModeChange()"></label>
+            <span class="rlabel">No. of Orders ≥</span>
+            <input type="number" id="oc_gte_val" min="0" step="1" placeholder="值" disabled style="max-width:130px">
+          </div>
+          <div class="rrow" style="margin-bottom:8px">
+            <label class="opt"><input type="radio" name="oc_mode" value="lt" onchange="onOCModeChange()"></label>
+            <span class="rlabel">No. of Orders &lt;</span>
+            <input type="number" id="oc_lt_val" min="0" step="1" placeholder="值" disabled style="max-width:130px">
+          </div>
+          <div class="rrow">
+            <label class="opt"><input type="radio" name="oc_mode" value="range" onchange="onOCModeChange()"></label>
+            <input type="number" id="oc_range_lower" min="0" step="1" placeholder="Lower" disabled style="max-width:130px">
+            <span class="rlabel">≤ No. of Orders &lt;</span>
+            <input type="number" id="oc_range_upper" min="0" step="1" placeholder="Upper" disabled style="max-width:130px">
+          </div>
+          <div class="hint" style="margin-top:6px">選擇模式後填入數值；不選則不限制</div>
+        </div>
+      </div>
+      </div><!-- /ssc_body -->
+    </div>
+
+  </form>
+</div>
+
+<!-- Soft block modal -->
+<div id="soft_modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">⚠ 提醒</div>
+    <div class="modal-body">一般賣家以單件商品成交金額最高 NT$35,000 為上限計算，請務必確認並填寫 <strong>單品費用上下限（Item level fees limit）</strong>。</div>
+    <div id="soft_calc" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:10px 0;font-size:13px;line-height:2"></div>
+    <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;font-size:13px;cursor:pointer">
+      <input type="checkbox" id="soft_confirm_cb" onchange="var b=document.getElementById('soft_autofill_btn');b.disabled=!this.checked;b.style.opacity=this.checked?'1':'0.45';b.style.cursor=this.checked?'pointer':'not-allowed';" style="width:15px;height:15px;flex-shrink:0;cursor:pointer">
+      確認使用 <span id="soft_confirm_amount" style="font-weight:600"></span> 作為 Item level fees limit Max
+    </label>
+    <div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">若確認不需填寫，請說明原因：</div>
+      <textarea id="soft_reason" placeholder="請輸入原因..." style="width:100%;min-height:70px"></textarea>
+    </div>
+    <div class="modal-actions" style="flex-wrap:wrap;gap:8px">
+      <button class="btn" onclick="closeSoftModal()">返回填寫</button>
+      <button id="soft_autofill_btn" class="btn" onclick="autoFillAndExport()" disabled style="background:#52c41a;border-color:#52c41a;color:#fff;opacity:0.45;cursor:not-allowed;transition:opacity .15s">⚡ 自動填入建議值並匯出</button>
+      <button class="btn btn-primary" onclick="confirmSoftModal()">確認不需填寫並匯出</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import choice modal (single file) -->
+<div id="imp_modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title" style="color:#1890ff">⬆ 匯入 CSV</div>
+    <div class="modal-body">
+      已選擇「<span id="imp_modal_fname" style="font-weight:600"></span>」<br>
+      請選擇匯入方式：
+    </div>
+    <div class="modal-actions" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <button class="btn" onclick="closeImportModal()">取消</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="importToCurrentTab()">更新本頁「<span id="imp_modal_curtab"></span>」</button>
+        <button class="btn" id="imp_modal_newtab_btn" onclick="importToNewTab()" style="border-color:#1890ff;color:#1890ff">開啟新分頁</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fixed-bar">
+  <button class="btn btn-primary" onclick="doExport()">⬇ 匯出本頁 CSV</button>
+  <button class="btn btn-primary" id="btn_export_all" onclick="doExportAll()" style="display:none">⬇ 匯出全部 CSV</button>
+  <button class="btn" onclick="document.getElementById('csvImpFile').click()">⬆ 匯入 CSV</button>
+  <input type="file" id="csvImpFile" accept=".csv" multiple style="display:none" onchange="doImportCSV(this)">
+  <button class="btn btn-danger" onclick="doReset()">重設本頁</button>
+  <span class="saved-msg" id="savedMsg">✓ 已匯出</span>
+  <span class="err-banner" id="val_err" style="display:none"></span>
+  <button class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="margin-left:auto">↑ 返回最上面</button>
+</div>
+
+<script>
+var FORM_VERSION = 'v1.8';
+
+// ===== Tag state =====
+var shopTags   = [{id:'', ie:'include'}];
+var sellerTags = [{tag_type:'public', id:'', ie:'include'}];
+
+// ===== Tab state =====
+var tabs      = [{ name: '規則 1', snap: null }];
+var activeTab = 0;
+var MAX_TABS  = 10;
+
+// ===== Date =====
+function refreshDate(which) {
+  var id  = which === 'start' ? 'start_date' : 'end_date';
+  var did = which === 'start' ? 'start_disp'  : 'end_disp';
+  var v   = document.getElementById(id).value;
+  var t   = which === 'start' ? '00:00:00' : '23:59:59';
+  document.getElementById(did).textContent = v ? (v + ' ' + t + ' +08:00') : '—';
+}
+function fmtDate(id, time) {
+  var v = document.getElementById(id) && document.getElementById(id).value;
+  return v ? (v + ' ' + time + ' +08:00') : null;
+}
+
+// ===== Quota =====
+function onQuotaChange(checked) {
+  document.getElementById('q_mode_gte').disabled = !checked;
+  document.getElementById('q_mode_lte').disabled = !checked;
+  if (!checked) {
+    document.getElementById('quota_lower').disabled = true;
+    document.getElementById('quota_upper').disabled = true;
+  } else {
+    onQuotaModeChange();
+  }
+}
+function onQuotaModeChange() {
+  var v = gr('quota_mode');
+  document.getElementById('quota_lower').disabled = v !== 'gte';
+  document.getElementById('quota_upper').disabled = v !== 'lte';
+}
+
+// ===== Charging Level =====
+function onChargingLevelChange() {
+  var isItem = document.querySelector('input[name="charging_level"]:checked').value === 'item_level';
+  document.getElementById('commission_rate').value = '';
+  document.getElementById('item_fee_min').value = '';
+  document.getElementById('item_fee_max').value = '';
+  document.getElementById('item_fee_min').disabled = !isItem;
+  document.getElementById('item_fee_max').disabled = !isItem;
+  if (!isItem) {
+    var r = document.querySelector('input[name="item_type"][value="product_category"]');
+    if (r) r.checked = true;
+    var ci = document.querySelector('input[name="cat_ie"][value="include"]');
+    if (ci) ci.checked = true;
+    document.getElementById('global_cat').value = 'all categories';
+    var ll = document.querySelector('input[name="label_level"][value="item"]');
+    if (ll) ll.checked = true;
+    var ml = document.querySelector('input[name="monitor_label"][value="no"]');
+    if (ml) ml.checked = true;
+    document.getElementById('label_id').value = '';
+    document.getElementById('cat_sub').style.display   = '';
+    document.getElementById('label_sub').style.display = 'none';
+  }
+  document.getElementById('item_elig_card').querySelectorAll('input, select, textarea').forEach(function(el) {
+    el.disabled = !isItem;
+  });
+  if (isItem) onItemTypeSwitch();
+}
+
+// ===== Fulfilment Type =====
+function onFulfilTypeSwitch() {
+  var v = document.querySelector('input[name="fulfil_filter"]:checked').value;
+  if (v === 'checkout_logistics') {
+    document.getElementById('ft_local').checked    = false;
+    document.getElementById('ft_overseas').checked = false;
+    document.getElementById('ft_shopee').checked   = false;
+  } else {
+    var incEl = document.querySelector('input[name="checkout_ie"][value="include"]');
+    if (incEl) incEl.checked = true;
+    document.getElementById('checkout_channels').value = 'All logistic channels';
+  }
+  document.getElementById('checkout_sub').style.display = v === 'checkout_logistics' ? '' : 'none';
+  document.getElementById('fulfil_sub').style.display   = v === 'fulfilment_type'    ? '' : 'none';
+}
+
+// ===== Item Type =====
+function onItemTypeSwitch() {
+  var v = document.querySelector('input[name="item_type"]:checked').value;
+  var sfEls = document.querySelectorAll('input[name="shop_filter"]');
+  if (v === 'product_category') {
+    var itemEl = document.querySelector('input[name="label_level"][value="item"]');
+    if (itemEl) itemEl.checked = true;
+    var noEl = document.querySelector('input[name="monitor_label"][value="no"]');
+    if (noEl) noEl.checked = true;
+    document.getElementById('label_id').value = '';
+    // Restore shop filter options
+    for (var j = 0; j < sfEls.length; j++) sfEls[j].disabled = false;
+    document.getElementById('shopid_label_hint').style.display = 'none';
+  } else {
+    var incEl = document.querySelector('input[name="cat_ie"][value="include"]');
+    if (incEl) incEl.checked = true;
+    document.getElementById('global_cat').value = 'all categories';
+    // Force By ShopID and lock other options
+    var shopidEl = document.querySelector('input[name="shop_filter"][value="shopid"]');
+    if (shopidEl && !shopidEl.checked) { shopidEl.checked = true; onShopFilterSwitch(); }
+    for (var k = 0; k < sfEls.length; k++) sfEls[k].disabled = sfEls[k].value !== 'shopid';
+    document.getElementById('shopid_label_hint').style.display = '';
+  }
+  document.getElementById('cat_sub').style.display   = v === 'product_category' ? '' : 'none';
+  document.getElementById('label_sub').style.display = v === 'product_label_id' ? '' : 'none';
+}
+
+// ===== Order Count =====
+function onOCModeChange() {
+  var v = gr('oc_mode');
+  document.getElementById('oc_gte_val').disabled    = v !== 'gte';
+  document.getElementById('oc_lt_val').disabled     = v !== 'lt';
+  document.getElementById('oc_range_lower').disabled = v !== 'range';
+  document.getElementById('oc_range_upper').disabled = v !== 'range';
+}
+
+// ===== Shop Filter =====
+function onShopFilterSwitch() {
+  var el = document.querySelector('input[name="shop_filter"]:checked');
+  var v  = el ? el.value : 'shopid';
+  if (v !== 'shopid') {
+    document.getElementById('shop_ids_text').value = '';
+    document.getElementById('shopid_fname').textContent = '未選擇檔案';
+  }
+  shopTags = [{id:'', ie:'include'}];
+  renderShopTags();
+  if (v !== 'seller_tag') {
+    sellerTags = [{tag_type:'public', id:'', ie:'include'}];
+    renderSellerTags();
+    document.getElementById('seller_tag_err').textContent = '';
+  }
+  document.getElementById('shopid_sub').style.display        = v === 'shopid'        ? '' : 'none';
+  document.getElementById('default_group_sub').style.display  = v === 'default_group'  ? '' : 'none';
+  document.getElementById('seller_tag_sub').style.display     = v === 'seller_tag'     ? '' : 'none';
+}
+
+// ===== CSV upload to field =====
+function parseCSVToField(input, fieldId, nameId) {
+  var file = input.files[0]; if (!file) return;
+  document.getElementById(nameId).textContent = file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var lines = e.target.result.replace(/\r/g,'').split('\n').map(function(l){return l.trim();}).filter(function(l){return l;});
+    var ids = lines.slice(1).map(function(l){return l.split(',')[0].trim();}).filter(function(v){return v;});
+    var target = document.getElementById(fieldId);
+    if (target) target.value = ids.join(', ');
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ===== Shop Tag rows =====
+function renderShopTags() {
+  var container = document.getElementById('shop_tag_rows');
+  if (!container) return;
+  var html = '';
+  for (var i = 0; i < shopTags.length; i++) {
+    var row = shopTags[i];
+    html += '<div class="tag-row">'
+      + '<input type="text" placeholder="Shop Tag ID" value="' + esc(row.id) + '" oninput="shopTags[' + i + '].id=this.value">'
+      + '<label class="opt"><input type="radio" name="sti_' + i + '" value="include"' + (row.ie==='include'?' checked':'') + ' onchange="shopTags[' + i + '].ie=\'include\'"> 包含（Include）</label>'
+      + '<label class="opt"><input type="radio" name="sti_' + i + '" value="exclude"' + (row.ie==='exclude'?' checked':'') + ' onchange="shopTags[' + i + '].ie=\'exclude\'"> 排除（Exclude）</label>'
+      + (i > 0 ? '<button type="button" class="rmv-btn" onclick="removeShopTag(' + i + ')" title="移除">✕</button>' : '<span style="width:22px"></span>')
+      + '</div>';
+  }
+  container.innerHTML = html;
+}
+function addShopTag() { shopTags.push({id:'', ie:'include'}); renderShopTags(); }
+function removeShopTag(i) { shopTags.splice(i, 1); renderShopTags(); }
+
+// ===== Seller Tag rows =====
+function renderSellerTags() {
+  var html = '';
+  for (var i = 0; i < sellerTags.length; i++) {
+    var row = sellerTags[i];
+    html += '<div class="tag-row">'
+      + '<select onchange="sellerTags[' + i + '].tag_type=this.value">'
+      + '<option value="public"' + (row.tag_type==='public'?' selected':'') + '>公開標籤（Public Tag）</option>'
+      + '<option value="private"' + (row.tag_type==='private'?' selected':'') + '>私密標籤（Private Tag）</option>'
+      + '</select>'
+      + '<input type="text" placeholder="Seller Tag ID" value="' + esc(row.id) + '" oninput="sellerTags[' + i + '].id=this.value">'
+      + '<label class="opt"><input type="radio" name="sti2_' + i + '" value="include"' + (row.ie==='include'?' checked':'') + ' onchange="sellerTags[' + i + '].ie=\'include\'"> 包含（Include）</label>'
+      + '<label class="opt"><input type="radio" name="sti2_' + i + '" value="exclude"' + (row.ie==='exclude'?' checked':'') + ' onchange="sellerTags[' + i + '].ie=\'exclude\'"> 排除（Exclude）</label>'
+      + (i > 0 ? '<button type="button" class="rmv-btn" onclick="removeSellerTag(' + i + ')" title="移除">✕</button>' : '<span style="width:22px"></span>')
+      + '</div>';
+  }
+  document.getElementById('seller_tag_rows').innerHTML = html;
+}
+function addSellerTag() {
+  if (sellerTags.length >= 8) { document.getElementById('seller_tag_err').textContent = 'Seller tags must not exceed 8!'; return; }
+  document.getElementById('seller_tag_err').textContent = '';
+  sellerTags.push({tag_type:'public', id:'', ie:'include'});
+  renderSellerTags();
+}
+function removeSellerTag(i) {
+  sellerTags.splice(i, 1);
+  document.getElementById('seller_tag_err').textContent = '';
+  renderSellerTags();
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+// ===== Value helpers =====
+function gv(id) { var e=document.getElementById(id); return e&&e.value.trim()||null; }
+function gn(id) { var e=document.getElementById(id),v=e&&e.value; return v!==''&&v!=null?parseFloat(v):null; }
+function gb(id) { var e=document.getElementById(id); return !!(e&&e.checked); }
+function gr(name) { var e=document.querySelector('input[name="'+name+'"]:checked'); return e?e.value:null; }
+
+// ===== Collect Data =====
+function collectData() {
+  var charging   = gr('charging_level');
+  var isOrder    = charging === 'order_level';
+  var itemType   = gr('item_type');
+  var isCat      = itemType === 'product_category';
+  var filterType = gr('fulfil_filter');
+  var isCheckout = filterType === 'checkout_logistics';
+  var shopFilter = gr('shop_filter');
+  var ocMode     = gr('oc_mode');
+
+  var itemElig = isOrder
+    ? { item_type: 'product_category', category_include_exclude: 'include',
+        global_product_category: 'all categories',
+        product_label_level: null, monitor_label_changes: null, label_id: null }
+    : { item_type: itemType,
+        category_include_exclude: isCat ? gr('cat_ie')       : null,
+        global_product_category:  isCat ? gv('global_cat')   : null,
+        product_label_level:     !isCat ? gr('label_level')  : null,
+        monitor_label_changes:   !isCat ? gr('monitor_label'): null,
+        label_id:                !isCat ? gv('label_id')     : null };
+
+  return {
+    rule_basic_info: {
+      rule_name:    gv('rule_name'),
+      start_period: fmtDate('start_date','00:00:00'),
+      end_period:   fmtDate('end_date','23:59:59')
+    },
+    push_notification: {
+      activate_pn_for_newly_enrolled: gb('activate_pn'),
+      display_name_to_seller:         gv('display_name'),
+      rule_name_in_notification:      gv('pn_rule_name'),
+      redirect_link:                  gv('redirect_link'),
+      quota_subjected:                gb('quota_chk'),
+      quota_mode:                     gr('quota_mode'),
+      quota_order_count_lower:        gn('quota_lower'),
+      quota_order_count_upper:        gn('quota_upper')
+    },
+    charging_info: {
+      charging_level:      charging,
+      new_shop_start_time: gr('new_shop_time'),
+      fixed_fee:           null,
+      commission_rate_pct: gn('commission_rate'),
+      item_level_fee_min:  isOrder ? null : gn('item_fee_min'),
+      item_level_fee_max:  isOrder ? null : gn('item_fee_max'),
+      order_level_fee_min: null,
+      order_level_fee_max: null
+    },
+    order_eligibility: {
+      order_basket_size_min: gn('basket_min'),
+      order_basket_size_max: gn('basket_max')
+    },
+    fulfilment_type: {
+      filter_type: filterType,
+      checkout_logistics_channel: {
+        include_exclude: isCheckout ? gr('checkout_ie')       : null,
+        channels:        isCheckout ? gv('checkout_channels') : null
+      },
+      fulfilment_type_selection: {
+        seller_local_wh:    isCheckout ? null : gb('ft_local'),
+        seller_overseas_wh: isCheckout ? null : gb('ft_overseas'),
+        shopee:             isCheckout ? null : gb('ft_shopee')
+      }
+    },
+    item_eligibility: itemElig,
+    shop_eligibility: {
+      shop_category: gr('shop_category'),
+      filter_by:     shopFilter,
+      shop_ids_text: shopFilter === 'shopid'      ? gv('shop_ids_text') : null,
+      shop_tags:     null,
+      seller_tags:   shopFilter === 'seller_tag'  ? sellerTags.filter(function(t){return t.id.trim();}) : null
+    },
+    shop_sales_criteria: {
+      order_count_mode:  ocMode,
+      order_count_lower: ocMode==='gte' ? gn('oc_gte_val') : (ocMode==='range' ? gn('oc_range_lower') : null),
+      order_count_upper: ocMode==='lt'  ? gn('oc_lt_val')  : (ocMode==='range' ? gn('oc_range_upper') : null)
+    },
+    _meta: { exported_at: new Date().toISOString(), form_version: FORM_VERSION }
+  };
+}
+
+// ===== Validation =====
+function clearErrors() {
+  document.querySelectorAll('.has-error').forEach(function(el) { el.classList.remove('has-error'); });
+  document.getElementById('val_err').style.display = 'none';
+  document.getElementById('seller_tag_err').textContent = '';
+}
+
+function validate(noScroll) {
+  clearErrors();
+  var errs = [];
+  var first = null;
+  function mark(el, label) {
+    errs.push(label);
+    if (el) { el.classList.add('has-error'); if (!first) first = el; }
+  }
+  if (!gv('rule_name'))
+    mark(document.getElementById('rule_name'), 'Rule Name');
+  if (!document.getElementById('start_date').value)
+    mark(document.getElementById('start_date'), 'Start Period of the Rule');
+  if (!document.getElementById('end_date').value)
+    mark(document.getElementById('end_date'), 'End Period of the Rule');
+  var sv = document.getElementById('start_date').value;
+  var ev = document.getElementById('end_date').value;
+  if (sv && ev && ev < sv)
+    mark(document.getElementById('end_date'), 'End Period 不能早於 Start Period');
+  if (document.getElementById('commission_rate').value === '')
+    mark(document.getElementById('commission_rate'), 'Fees Charged (%)');
+  if (gr('fulfil_filter') === 'checkout_logistics' && !gr('checkout_ie'))
+    mark(document.querySelector('input[name="checkout_ie"]').closest('.rgroup'), 'Include / Exclude (Checkout Logistics Channel)');
+  if (!gr('shop_category'))
+    mark(document.querySelector('input[name="shop_category"]').closest('.seg-radio'), 'Shop Category');
+  if (gr('item_type') === 'product_label_id' && !gv('label_id'))
+    mark(document.getElementById('label_id'), 'Label ID');
+  var shopFilter = gr('shop_filter');
+  if (shopFilter === 'shopid' && !gv('shop_ids_text') && gr('item_type') !== 'product_label_id')
+    mark(document.getElementById('shop_ids_text'), '店家 ID 清單（By ShopID 必填）');
+  if (shopFilter === 'seller_tag' && !sellerTags.some(function(t){ return t.id.trim(); })) {
+    errs.push('賣家標籤 ID（至少填寫一筆）');
+    document.getElementById('seller_tag_err').textContent = '⚠ 請至少填寫一筆 Seller Tag ID';
+    if (!first) first = document.getElementById('seller_tag_rows');
+  }
+  if (errs.length) {
+    var eb = document.getElementById('val_err');
+    eb.textContent = '⚠ 必填未完成：' + errs.join('、');
+    eb.style.display = 'inline';
+    if (first && !noScroll) first.scrollIntoView({behavior: 'smooth', block: 'center'});
+  }
+  return errs.length === 0;
+}
+
+// ===== Soft Block =====
+var _pendingData = null;
+var _pendingRows = null;
+
+function needsSoftBlock(data) {
+  return data.shop_eligibility.shop_category === 'local_c2c'
+      && data.charging_info.charging_level === 'item_level'
+      && data.charging_info.item_level_fee_min === null
+      && data.charging_info.item_level_fee_max === null;
+}
+function closeSoftModal() {
+  document.getElementById('soft_modal').style.display = 'none';
+  _pendingData = null; _pendingRows = null;
+}
+function confirmSoftModal() {
+  var reason = document.getElementById('soft_reason').value.trim();
+  if (!reason) { document.getElementById('soft_reason').classList.add('has-error'); return; }
+  document.getElementById('soft_reason').classList.remove('has-error');
+  _pendingData._meta.skip_item_fee_limit_reason = reason;
+  downloadCSV(_pendingData, _pendingRows);
+  closeSoftModal();
+}
+function autoFillAndExport() {
+  var rate    = _pendingData ? (_pendingData.charging_info.commission_rate_pct || 0) : 0;
+  var calcMax = Math.round(rate / 100 * 35000);
+  document.getElementById('item_fee_max').value = calcMax;
+  closeSoftModal();
+  doExport(); // re-run: item_fee_max now filled → needsSoftBlock() = false → normal export
+}
+
+// ===== Single-tab export =====
+function doExport() {
+  if (!validate()) return;
+  var data = collectData();
+  if (needsSoftBlock(data)) {
+    _pendingData = data;
+    _pendingRows = collectCSVRows();
+    document.getElementById('soft_reason').value = '';
+    document.getElementById('soft_reason').classList.remove('has-error');
+    var _rate = _pendingData.charging_info.commission_rate_pct || 0;
+    var _calcMax = Math.round(_rate / 100 * 35000);
+    document.getElementById('soft_calc').innerHTML =
+      '費率 <strong>' + _rate + '%</strong> × NT$35,000 = '
+      + '<strong style="font-size:16px;color:var(--primary)">NT$' + _calcMax.toLocaleString() + '</strong>'
+      + '<br><span style="font-size:12px;color:var(--hint)">↑ 建議作為 Item level fees limit Max 的參考值，返回填寫後可繼續匯出</span>';
+    document.getElementById('soft_confirm_amount').textContent = 'NT$' + _calcMax.toLocaleString();
+    var _cb = document.getElementById('soft_confirm_cb');
+    _cb.checked = false;
+    var _abtn = document.getElementById('soft_autofill_btn');
+    _abtn.disabled = true;
+    _abtn.style.opacity = '0.45';
+    _abtn.style.cursor  = 'not-allowed';
+    document.getElementById('soft_modal').style.display = 'flex';
+    return;
+  }
+  downloadCSV(data, collectCSVRows());
+}
+
+function showSaved() {
+  var el = document.getElementById('savedMsg');
+  if (!el) return;
+  el.style.display = 'inline';
+  setTimeout(function(){ el.style.display = 'none'; }, 3000);
+}
+
+// ===== Reset =====
+function resetForm() {
+  document.getElementById('theForm').reset();
+  shopTags   = [{id:'', ie:'include'}];
+  sellerTags = [{tag_type:'public', id:'', ie:'include'}];
+  renderShopTags();
+  renderSellerTags();
+  onQuotaChange(false);
+  onChargingLevelChange();
+  onFulfilTypeSwitch();
+  onItemTypeSwitch();
+  onShopFilterSwitch();
+  onOCModeChange();
+  document.getElementById('start_disp').textContent  = '—';
+  document.getElementById('end_disp').textContent    = '—';
+  document.getElementById('cat_fname').textContent    = '未選擇檔案';
+  document.getElementById('shopid_fname').textContent = '未選擇檔案';
+  document.getElementById('global_cat').value = 'all categories';
+  clearErrors();
+  // Update current tab record
+  tabs[activeTab].name = '規則 ' + (activeTab + 1);
+  tabs[activeTab].snap = null;
+  renderTabs();
+}
+function doReset() {
+  if (!confirm('確定要清空本頁（' + tabs[activeTab].name + '）所有欄位嗎？')) return;
+  resetForm();
+}
+
+// ===== Tab Management =====
+function renderTabs() {
+  var html = '';
+  for (var i = 0; i < tabs.length; i++) {
+    html += '<div class="tab-item' + (i === activeTab ? ' active' : '') + '" onclick="switchTab(' + i + ')">'
+      + '<span class="tab-label">' + esc(tabs[i].name) + '</span>'
+      + (tabs.length > 1 ? '<button type="button" class="tab-x" onclick="closeTab(event,' + i + ')" title="關閉此分頁">✕</button>' : '')
+      + '</div>';
+  }
+  if (tabs.length < MAX_TABS) {
+    html += '<button type="button" class="tab-add-btn" onclick="addTab()">＋ 新增分頁</button>';
+    html += '<button type="button" class="tab-add-btn" onclick="batchAddTabs()" style="opacity:.8">⊞ 批次新增</button>';
+  }
+  document.getElementById('tab_bar_outer').innerHTML = html;
+  var btnAll = document.getElementById('btn_export_all');
+  if (btnAll) btnAll.style.display = tabs.length > 1 ? 'inline-flex' : 'none';
+}
+
+function onRuleNameInput() {
+  var name = document.getElementById('rule_name').value.trim();
+  tabs[activeTab].name = name || ('規則 ' + (activeTab + 1));
+  renderTabs();
+}
+
+function serializeForm() {
+  var snap = { _radios: {} };
+  // Text / number / date / textarea / select
+  document.querySelectorAll('#theForm input[type=text], #theForm input[type=number], #theForm input[type=date], #theForm textarea, #theForm select').forEach(function(el) {
+    if (el.id) snap[el.id] = el.value;
+  });
+  // Checkboxes
+  document.querySelectorAll('#theForm input[type=checkbox]').forEach(function(el) {
+    if (el.id) snap['_cb_' + el.id] = el.checked;
+  });
+  // Radios by name
+  document.querySelectorAll('#theForm input[type=radio]').forEach(function(el) {
+    if (el.name && !(el.name in snap._radios)) {
+      var c = document.querySelector('#theForm input[name="' + el.name + '"]:checked');
+      snap._radios[el.name] = c ? c.value : null;
+    }
+  });
+  // Tags
+  snap._shopTags   = JSON.parse(JSON.stringify(shopTags));
+  snap._sellerTags = JSON.parse(JSON.stringify(sellerTags));
+  // Display texts
+  snap._start_disp  = document.getElementById('start_disp').textContent;
+  snap._end_disp    = document.getElementById('end_disp').textContent;
+  snap._cat_fname   = document.getElementById('cat_fname').textContent;
+  snap._shopid_fname = document.getElementById('shopid_fname').textContent;
+  return snap;
+}
+
+function deserializeForm(snap) {
+  if (!snap) { resetForm(); return; }
+  // 1. Set radios (no events)
+  if (snap._radios) {
+    Object.keys(snap._radios).forEach(function(name) {
+      var val = snap._radios[name];
+      document.querySelectorAll('#theForm input[name="' + name + '"]').forEach(function(el) {
+        el.checked = (el.value === val);
+      });
+    });
+  }
+  // 2. Set checkboxes
+  document.querySelectorAll('#theForm input[type=checkbox]').forEach(function(el) {
+    if (el.id && snap['_cb_' + el.id] !== undefined) el.checked = snap['_cb_' + el.id];
+  });
+  // 3. Trigger UI updates (may clear some fields — restored in step 4)
+  onQuotaChange(document.getElementById('quota_chk').checked);
+  onChargingLevelChange();
+  onFulfilTypeSwitch();
+  onItemTypeSwitch();
+  onShopFilterSwitch();
+  onOCModeChange();
+  // 4. Restore field values (overwrite any resets from step 3)
+  document.querySelectorAll('#theForm input[type=text], #theForm input[type=number], #theForm input[type=date], #theForm textarea, #theForm select').forEach(function(el) {
+    if (el.id && snap[el.id] !== undefined) el.value = snap[el.id];
+  });
+  // 5. Restore tags
+  shopTags   = snap._shopTags   ? JSON.parse(JSON.stringify(snap._shopTags))   : [{id:'', ie:'include'}];
+  sellerTags = snap._sellerTags ? JSON.parse(JSON.stringify(snap._sellerTags)) : [{tag_type:'public', id:'', ie:'include'}];
+  renderShopTags();
+  renderSellerTags();
+  // 6. Restore display texts
+  document.getElementById('start_disp').textContent   = snap._start_disp   || '—';
+  document.getElementById('end_disp').textContent     = snap._end_disp     || '—';
+  document.getElementById('cat_fname').textContent    = snap._cat_fname    || '未選擇檔案';
+  document.getElementById('shopid_fname').textContent = snap._shopid_fname || '未選擇檔案';
+  clearErrors();
+}
+
+function switchTab(idx) {
+  if (idx === activeTab) return;
+  tabs[activeTab].snap = serializeForm();
+  activeTab = idx;
+  deserializeForm(tabs[activeTab].snap);
+  renderTabs();
+}
+
+function addTab() {
+  if (tabs.length >= MAX_TABS) return;
+  tabs[activeTab].snap = serializeForm();
+  activeTab = tabs.length;
+  tabs.push({ name: '規則 ' + (activeTab + 1), snap: null });
+  deserializeForm(null); // calls resetForm which calls renderTabs
+}
+
+function closeTab(event, idx) {
+  event.stopPropagation();
+  if (tabs.length === 1) return;
+  if (!confirm('確定要關閉「' + tabs[idx].name + '」？\n此分頁的資料將遺失。')) return;
+  if (idx !== activeTab) {
+    tabs[activeTab].snap = serializeForm();
+  }
+  tabs.splice(idx, 1);
+  if (activeTab > idx) activeTab--;
+  else if (activeTab >= tabs.length) activeTab = tabs.length - 1;
+  deserializeForm(tabs[activeTab].snap);
+  renderTabs();
+}
+
+// ===== Export All Tabs =====
+function doExportAll() {
+  tabs[activeTab].snap = serializeForm();
+  var savedActive = activeTab;
+  var exportItems = [];
+
+  for (var i = 0; i < tabs.length; i++) {
+    activeTab = i;
+    deserializeForm(tabs[i].snap);
+
+    if (!validate(true)) {
+      var errMsg = document.getElementById('val_err').textContent || '有必填欄位未完成';
+      // Stay on the failing tab so user can see red highlights
+      renderTabs();
+      alert('分頁「' + tabs[i].name + '」驗證失敗，已切換至該分頁。\n\n' + errMsg + '\n\n請修正紅色欄位後再匯出全部。');
+      return;
+    }
+    var data = collectData();
+    if (needsSoftBlock(data)) {
+      alert('分頁「' + tabs[i].name + '」觸發 Soft Block（C2C + 單品層級 + 未填費用上下限）。\n請切換至該分頁，使用「匯出本頁 CSV」並說明原因，或補填費用上下限後再匯出全部。');
+      activeTab = savedActive;
+      deserializeForm(tabs[savedActive].snap);
+      renderTabs();
+      return;
+    }
+    exportItems.push({ data: data, rows: collectCSVRows() });
+  }
+
+  // All valid — download each file with a staggered delay
+  exportItems.forEach(function(item, j) {
+    setTimeout(function() {
+      var csv  = toCSVString(item.rows);
+      var name = slugName(item.data.rule_basic_info.rule_name);
+      var date = new Date().toISOString().slice(0,10);
+      var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      var a    = document.createElement('a');
+      a.href   = URL.createObjectURL(blob);
+      a.download = 'commission-fee_' + name + '_' + date + '.csv';
+      a.click();
+    }, j * 400);
+  });
+
+  showSaved();
+  // Reset all tabs back to one empty tab
+  tabs = [{ name: '規則 1', snap: null }];
+  activeTab = 0;
+  deserializeForm(null); // calls resetForm → renderTabs
+}
+
+// ===== CSV Export helpers =====
+var _csvRows = null;
+
+function collectCSVRows() {
+  var d = collectData();
+  var rows = [['Field', '欄位', '值 (Value)'], ['Form Version', '表單版本', FORM_VERSION]];
+  function r(en, zh, v) {
+    if (v === null || v === undefined) v = '';
+    if (typeof v === 'boolean') v = v ? 'TRUE' : 'FALSE';
+    rows.push([en, zh, String(v)]);
+  }
+  function sec(en, zh) { rows.push(['','','']); rows.push(['['+en+']','['+zh+']','']); }
+
+  sec('Rule Basic Info', '規則基本資訊');
+  r('Rule Name', '規則名稱', d.rule_basic_info.rule_name);
+  r('Start Period', '開始時間', d.rule_basic_info.start_period);
+  r('End Period', '結束時間', d.rule_basic_info.end_period);
+
+  sec('Push Notification to Sellers', '推播通知');
+  r('Activate PN & AR', '推播通知啟用', d.push_notification.activate_pn_for_newly_enrolled);
+  r('Display Name to Seller', '顯示名稱', d.push_notification.display_name_to_seller);
+  r('Rule Name in Notification Content', '通知規則名稱', d.push_notification.rule_name_in_notification);
+  r('Redirect Link', '導向連結', d.push_notification.redirect_link);
+  r('Quota Subjected', '配額限制', d.push_notification.quota_subjected);
+  r('Quota Mode', '配額模式', d.push_notification.quota_mode);
+  r('Quota Order Count Lower', '配額下界', d.push_notification.quota_order_count_lower);
+  r('Quota Order Count Upper', '配額上界', d.push_notification.quota_order_count_upper);
+
+  sec('Charging Info', '費用資訊');
+  r('Charging Level', '計費層級', d.charging_info.charging_level);
+  r('New Shop Start Time', '新店家計費時間', d.charging_info.new_shop_start_time);
+  r('Commission Rate (%)', '費率 %', d.charging_info.commission_rate_pct);
+  r('Item Level Fee Min', '單品費用下限', d.charging_info.item_level_fee_min);
+  r('Item Level Fee Max', '單品費用上限', d.charging_info.item_level_fee_max);
+  r('Order Level Fee Min', '訂單費用下限', d.charging_info.order_level_fee_min);
+  r('Order Level Fee Max', '訂單費用上限', d.charging_info.order_level_fee_max);
+
+  sec('Order Eligibility', '訂單資格');
+  r('Order Basket Size Min', '訂單金額下限', d.order_eligibility.order_basket_size_min);
+  r('Order Basket Size Max', '訂單金額上限', d.order_eligibility.order_basket_size_max);
+
+  sec('Fulfilment Type', '物流類型');
+  r('Filter Type', '篩選方式', d.fulfilment_type.filter_type);
+  r('Checkout - Include/Exclude', '包含/排除（結帳物流）', d.fulfilment_type.checkout_logistics_channel.include_exclude);
+  r('Checkout - Logistics Channels', '物流渠道', d.fulfilment_type.checkout_logistics_channel.channels);
+  r('Fulfilment - Seller Local WH', '賣家本地倉', d.fulfilment_type.fulfilment_type_selection.seller_local_wh);
+  r('Fulfilment - Seller Overseas WH', '賣家海外倉', d.fulfilment_type.fulfilment_type_selection.seller_overseas_wh);
+  r('Fulfilment - Shopee', 'Shopee 倉', d.fulfilment_type.fulfilment_type_selection.shopee);
+
+  sec('Item Eligibility', '商品資格');
+  r('Item Type', '商品類型', d.item_eligibility.item_type);
+  r('Category Include/Exclude', '包含/排除（商品分類）', d.item_eligibility.category_include_exclude);
+  r('GLOBAL Product Category', '全域商品分類', d.item_eligibility.global_product_category);
+  r('Product Label Level', '商品標籤層級', d.item_eligibility.product_label_level);
+  r('Monitor Label Changes', '監控標籤變更', d.item_eligibility.monitor_label_changes);
+  r('Label ID', '標籤 ID', d.item_eligibility.label_id);
+
+  sec('Shop Eligibility', '店家資格');
+  r('Shop Category', '店家類型', d.shop_eligibility.shop_category);
+  r('Filter By', '上傳店家方式', d.shop_eligibility.filter_by);
+  r('Shop IDs', '店家 ID 清單', d.shop_eligibility.shop_ids_text);
+  if (d.shop_eligibility.shop_tags) {
+    d.shop_eligibility.shop_tags.forEach(function(t, i) {
+      r('Shop Tag ' + (i+1) + ' - Tag ID', '店家標籤 ' + (i+1) + ' - Tag ID', t.id);
+      r('Shop Tag ' + (i+1) + ' - Include/Exclude', '店家標籤 ' + (i+1) + ' - 包含/排除', t.ie);
+    });
+  }
+  if (d.shop_eligibility.seller_tags) {
+    d.shop_eligibility.seller_tags.forEach(function(t, i) {
+      r('Seller Tag ' + (i+1) + ' - Tag Type', '賣家標籤 ' + (i+1) + ' - 標籤類型', t.tag_type);
+      r('Seller Tag ' + (i+1) + ' - Tag ID', '賣家標籤 ' + (i+1) + ' - Tag ID', t.id);
+      r('Seller Tag ' + (i+1) + ' - Include/Exclude', '賣家標籤 ' + (i+1) + ' - 包含/排除', t.ie);
+    });
+  }
+
+  sec('Shop Sales Criteria', '店家銷售條件');
+  r('Order Count Mode', '訂單數量模式', d.shop_sales_criteria.order_count_mode);
+  r('Order Count Lower', '訂單數量下界', d.shop_sales_criteria.order_count_lower);
+  r('Order Count Upper', '訂單數量上界', d.shop_sales_criteria.order_count_upper);
+
+  return rows;
+}
+
+function toCSVString(rows) {
+  return '﻿' + rows.map(function(row) {
+    return row.map(function(cell) {
+      var s = String(cell == null ? '' : cell);
+      if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(',');
+  }).join('\r\n');
+}
+
+function slugName(s) {
+  return (s || 'draft')
+    .replace(/%/g, '')                   // strip % entirely
+    .replace(/[^a-zA-Z0-9_\-\.]/g, '_') // replace other unsafe chars
+    .replace(/_+/g, '_')                 // collapse consecutive underscores
+    .replace(/^[_\.]+|[_\.]+$/g, '');   // trim leading/trailing _ or .
+}
+
+function downloadCSV(data, rows) {
+  var skipReason = data._meta && data._meta.skip_item_fee_limit_reason;
+  if (skipReason) {
+    rows = rows.concat([
+      ['', '', ''],
+      ['[Soft Block Override]', '[跳過費用上下限說明]', ''],
+      ['Skip Item Fee Limit Reason', '跳過單品費用上下限原因', skipReason]
+    ]);
+  }
+  var csv  = toCSVString(rows);
+  var name = slugName(data.rule_basic_info.rule_name);
+  var date = new Date().toISOString().slice(0,10);
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var a    = document.createElement('a');
+  a.href   = URL.createObjectURL(blob);
+  a.download = 'commission-fee_' + name + '_' + date + '.csv';
+  a.click();
+  showSaved();
+  resetForm(); // clear current tab after export
+}
+
+// ===== CSV Import =====
+function parseCSVLine(line) {
+  var cells = [], cur = '', inQuote = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (inQuote) {
+      if (c === '"') { if (line[i+1] === '"') { cur += '"'; i++; } else { inQuote = false; } }
+      else { cur += c; }
+    } else {
+      if (c === '"') { inQuote = true; }
+      else if (c === ',') { cells.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+  }
+  cells.push(cur);
+  return cells;
+}
+
+function parseCSVToMap(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  var lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  var header = parseCSVLine(lines[0] || '');
+  var valIdx = header.length >= 3 ? 2 : 1;
+  var map = {};
+  for (var i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var row   = parseCSVLine(lines[i]);
+    var field = (row[0] || '').trim();
+    if (!field || field.charAt(0) === '[' || field === 'Field' || field === '欄位 (Field)' || field === '欄位') continue;
+    map[field] = row[valIdx] !== undefined ? row[valIdx] : '';
+  }
+  return map;
+}
+
+var _pendingImportMap = null;
+
+function doImportCSV(input) {
+  var files = input.files;
+  if (!files || files.length === 0) return;
+
+  if (files.length === 1) {
+    // 單檔：讀取後詢問更新本頁或開新分頁
+    var file = files[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      _pendingImportMap = parseCSVToMap(e.target.result);
+      document.getElementById('imp_modal_fname').textContent = file.name;
+      document.getElementById('imp_modal_curtab').textContent = tabs[activeTab].name;
+      var newBtn = document.getElementById('imp_modal_newtab_btn');
+      newBtn.disabled = tabs.length >= MAX_TABS;
+      newBtn.title = tabs.length >= MAX_TABS ? '已達分頁上限（' + MAX_TABS + '）' : '';
+      document.getElementById('imp_modal').style.display = 'flex';
+    };
+    reader.readAsText(file, 'utf-8');
+  } else {
+    // 多檔：全部開新分頁
+    importMultipleFiles(Array.from(files), 0, files.length);
+  }
+  input.value = '';
+}
+
+function importToCurrentTab() {
+  document.getElementById('imp_modal').style.display = 'none';
+  if (_pendingImportMap) fillFormFromCSVMap(_pendingImportMap, false);
+  _pendingImportMap = null;
+}
+
+function importToNewTab() {
+  document.getElementById('imp_modal').style.display = 'none';
+  if (!_pendingImportMap) return;
+  if (tabs.length >= MAX_TABS) { alert('已達分頁上限（' + MAX_TABS + '），無法新增分頁。'); _pendingImportMap = null; return; }
+  tabs[activeTab].snap = serializeForm();
+  activeTab = tabs.length;
+  tabs.push({ name: '規則 ' + (activeTab + 1), snap: null });
+  deserializeForm(null);
+  fillFormFromCSVMap(_pendingImportMap, false);
+  _pendingImportMap = null;
+}
+
+function closeImportModal() {
+  document.getElementById('imp_modal').style.display = 'none';
+  _pendingImportMap = null;
+}
+
+function importMultipleFiles(files, idx, total) {
+  if (idx >= files.length) {
+    alert('✓ 已匯入 ' + total + ' 個分頁！');
+    return;
+  }
+  if (tabs.length >= MAX_TABS) {
+    alert('已達分頁上限（' + MAX_TABS + '），剩餘 ' + (files.length - idx) + ' 個檔案未匯入。');
+    return;
+  }
+  var file = files[idx];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var map = parseCSVToMap(e.target.result);
+    tabs[activeTab].snap = serializeForm();
+    activeTab = tabs.length;
+    tabs.push({ name: '規則 ' + (activeTab + 1), snap: null });
+    deserializeForm(null);
+    fillFormFromCSVMap(map, true); // silent，不跳個別 alert
+    importMultipleFiles(files, idx + 1, total);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function fillFormFromCSVMap(map, silent) {
+  var csvVer = map['Form Version'];
+  if (csvVer && csvVer !== FORM_VERSION) {
+    alert('⚠ 版本不符\nCSV 版本：' + csvVer + '\n目前表單版本：' + FORM_VERSION + '\n\n部分欄位格式可能有差異，請確認匯入結果。');
+  }
+
+  function sv(id, v) { if (v === undefined || v === null) return; var e = document.getElementById(id); if (e) e.value = v; }
+  function sb(id, v) { var e = document.getElementById(id); if (e) e.checked = (v === 'TRUE'); }
+  function sr(name, v) { if (!v) return; var e = document.querySelector('input[name="'+name+'"][value="'+v+'"]'); if (e) { e.checked=true; e.dispatchEvent(new Event('change')); } }
+
+  sv('rule_name', map['Rule Name']);
+  var sp = map['Start Period']; if (sp) { document.getElementById('start_date').value = sp.slice(0,10); refreshDate('start'); }
+  var ep = map['End Period'];   if (ep) { document.getElementById('end_date').value   = ep.slice(0,10); refreshDate('end'); }
+
+  sb('activate_pn', map['Activate PN & AR']);
+  sv('display_name', map['Display Name to Seller']);
+  sv('pn_rule_name', map['Rule Name in Notification Content']);
+  sv('redirect_link', map['Redirect Link']);
+  var qs = map['Quota Subjected'] === 'TRUE';
+  var qchk = document.getElementById('quota_chk'); if (qchk) qchk.checked = qs;
+  onQuotaChange(qs);
+  sr('quota_mode', map['Quota Mode']);
+  sv('quota_lower', map['Quota Order Count Lower']);
+  sv('quota_upper', map['Quota Order Count Upper']);
+
+  sr('charging_level', map['Charging Level']);
+  sr('new_shop_time', map['New Shop Start Time']);
+  sv('commission_rate', map['Commission Rate (%)']);
+  sv('item_fee_min', map['Item Level Fee Min']);
+  sv('item_fee_max', map['Item Level Fee Max']);
+
+  sv('basket_min', map['Order Basket Size Min']);
+  sv('basket_max', map['Order Basket Size Max']);
+
+  sr('fulfil_filter', map['Filter Type']);
+  sr('checkout_ie', map['Checkout - Include/Exclude']);
+  sv('checkout_channels', map['Checkout - Logistics Channels']);
+  sb('ft_local',    map['Fulfilment - Seller Local WH']);
+  sb('ft_overseas', map['Fulfilment - Seller Overseas WH']);
+  sb('ft_shopee',   map['Fulfilment - Shopee']);
+
+  sr('item_type', map['Item Type']);
+  sr('cat_ie', map['Category Include/Exclude']);
+  sv('global_cat', map['GLOBAL Product Category']);
+  sr('label_level', map['Product Label Level']);
+  sr('monitor_label', map['Monitor Label Changes']);
+  sv('label_id', map['Label ID']);
+
+  sr('shop_category', map['Shop Category']);
+  sr('shop_filter', map['Filter By']);
+  sv('shop_ids_text', map['Shop IDs']);
+
+  var newShopTags = [];
+  for (var i = 1; i <= 8; i++) {
+    var tid = map['Shop Tag ' + i + ' - Tag ID'];
+    if (tid === undefined) break;
+    newShopTags.push({id: tid, ie: map['Shop Tag ' + i + ' - Include/Exclude'] || 'include'});
+  }
+  if (newShopTags.length > 0) { shopTags = newShopTags; renderShopTags(); }
+
+  var newSellerTags = [];
+  for (var j = 1; j <= 8; j++) {
+    var stid = map['Seller Tag ' + j + ' - Tag ID'];
+    if (stid === undefined) break;
+    newSellerTags.push({tag_type: map['Seller Tag ' + j + ' - Tag Type'] || 'public', id: stid, ie: map['Seller Tag ' + j + ' - Include/Exclude'] || 'include'});
+  }
+  if (newSellerTags.length > 0) { sellerTags = newSellerTags; renderSellerTags(); }
+
+  var ocm = map['Order Count Mode'];
+  sr('oc_mode', ocm);
+  if (ocm === 'gte')   sv('oc_gte_val', map['Order Count Lower']);
+  if (ocm === 'lt')    sv('oc_lt_val',  map['Order Count Upper']);
+  if (ocm === 'range') { sv('oc_range_lower', map['Order Count Lower']); sv('oc_range_upper', map['Order Count Upper']); }
+
+  // Update tab name from imported rule name
+  var importedName = document.getElementById('rule_name').value.trim();
+  if (importedName) { tabs[activeTab].name = importedName; renderTabs(); }
+
+  if (!silent) alert('✓ CSV 資料已匯入！');
+}
+
+// ===== Sample CSV download =====
+function downloadSampleCSV(type) {
+  var content, filename;
+  if (type === 'shopid') {
+    content = 'shopid\n470357\n123456\n789012\n';
+    filename = 'sample_shop_ids.csv';
+  } else {
+    content = 'global_prodcat\nFood & Beverages\nElectronics\nFashion & Apparel\n';
+    filename = 'sample_categories.csv';
+  }
+  var blob = new Blob(['﻿' + content], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ===== Toggle collapsible card =====
+function toggleCard(bodyId, chevronId) {
+  var body    = document.getElementById(bodyId);
+  var chevron = document.getElementById(chevronId);
+  var opening = body.style.display === 'none';
+  body.style.display  = opening ? '' : 'none';
+  chevron.textContent = opening ? '▲ 收起' : '▶ 展開';
+}
+
+// ===== Batch date apply =====
+function applyBatchDate(target) {
+  var s = document.getElementById('batch_start').value;
+  var e = document.getElementById('batch_end').value;
+  if (!s && !e) { alert('請至少填寫一個日期'); return; }
+  function applyToForm() {
+    if (s) { document.getElementById('start_date').value = s; refreshDate('start'); }
+    if (e) { document.getElementById('end_date').value   = e; refreshDate('end'); }
+  }
+  if (target === 'current') {
+    applyToForm();
+    return;
+  }
+  // All tabs: apply to active form, then patch other snaps directly
+  applyToForm();
+  tabs[activeTab].snap = serializeForm();
+  for (var i = 0; i < tabs.length; i++) {
+    if (i === activeTab || !tabs[i].snap) continue;
+    if (s) { tabs[i].snap.start_date = s; tabs[i].snap._start_disp = s + ' 00:00:00 +08:00'; }
+    if (e) { tabs[i].snap.end_date   = e; tabs[i].snap._end_disp   = e + ' 23:59:59 +08:00'; }
+  }
+  alert('✓ 已套用至全部 ' + tabs.length + ' 個分頁');
+}
+
+// ===== Batch add tabs =====
+function batchAddTabs() {
+  var remaining = MAX_TABS - tabs.length;
+  if (remaining <= 0) { alert('已達分頁上限（' + MAX_TABS + '）'); return; }
+  var raw = prompt('請輸入要新增的分頁數量（1–' + remaining + '）：', '1');
+  if (raw === null) return;
+  var n = parseInt(raw, 10);
+  if (isNaN(n) || n < 1) { alert('請輸入有效的正整數'); return; }
+  n = Math.min(n, remaining);
+  tabs[activeTab].snap = serializeForm();
+  for (var i = 0; i < n; i++) {
+    tabs.push({ name: '規則 ' + (tabs.length + 1), snap: null });
+  }
+  renderTabs();
+  alert('✓ 已新增 ' + n + ' 個空白分頁');
+}
+
+// ===== Init =====
+document.getElementById('ver_badge').textContent = FORM_VERSION;
+renderTabs();
+renderShopTags();
+renderSellerTags();
+onItemTypeSwitch();
+onShopFilterSwitch();
+onFulfilTypeSwitch();
+</script>
+</body>
+</html>
