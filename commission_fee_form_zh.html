@@ -1516,10 +1516,10 @@ function fillFormFromCSVMap(map, silent) {
 function downloadSampleCSV(type) {
   var content, filename;
   if (type === 'shopid') {
-    content = 'shopid\n470357\n123456\n789012\n';
+    content = 'shopid';
     filename = 'sample_shop_ids.csv';
   } else {
-    content = 'global_prodcat\nFood & Beverages\nElectronics\nFashion & Apparel\n';
+    content = 'global_prodcat';
     filename = 'sample_categories.csv';
   }
   var blob = new Blob(['﻿' + content], {type:'text/csv;charset=utf-8;'});
