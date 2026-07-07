@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>TXT 閱讀器</title>
+<style>
+  :root {
+    --bg: #f5f0e1;
+    --fg: #3b3226;
+    --toolbar-bg: #e8e0cc;
+    --border: #cfc4a3;
+    --accent: #8a6d3b;
+    --highlight: #ffe58a;
+    --highlight-current: #ff9d3d;
+  }
+  [data-theme="white"] {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --toolbar-bg: #f0f0f0;
+    --border: #d8d8d8;
+    --accent: #4a6fa5;
+  }
+  [data-theme="dark"] {
+    --bg: #1e1e1e;
+    --fg: #d4d4d4;
+    --toolbar-bg: #2a2a2a;
+    --border: #3f3f3f;
+    --accent: #6fa8dc;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: "Microsoft JhengHei", sans-serif;
+  }
+  body {
+    display: flex; flex-direction: column;
+    background: var(--bg); color: var(--fg);
+    transition: background 0.2s, color 0.2s;
+  }
+  #toolbar {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 10px; padding: 8px 12px;
+    background: var(--toolbar-bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    position: relative;
+  }
+  #toolbar label { display: flex; align-items: center; gap: 4px; }
+  #toolbar select, #toolbar button, #toolbar input[type=range] {
+    font-family: inherit; font-size: 13px;
+  }
+  button {
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg); color: var(--fg);
+    border-radius: 4px; padding: 4px 10px;
+  }
+  button:hover { background: var(--accent); color: #fff; }
+  .spacer { flex: 1; }
+  #dropzone {
+    flex: 1; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+  }
+  #content {
+    flex: 1; overflow-y: auto; padding: 30px 60px;
+    line-height: 1.8;
+  }
+  #content .line {
+    white-space: pre-wrap; word-break: break-word; min-height: 1em;
+    scroll-margin-top: 4px;
+  }
+  #content .line.bookmarked { background: rgba(138, 109, 59, 0.12); border-left: 3px solid var(--accent); margin-left: -9px; padding-left: 6px; }
+  #placeholder {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; color: var(--accent);
+    border: 2px dashed var(--border); margin: 20px; border-radius: 8px;
+  }
+  #placeholder.hidden { display: none; }
+  #content.hidden { display: none; }
+  mark.hl { background: var(--highlight); color: inherit; }
+  mark.hl.current { background: var(--highlight-current); }
+  #searchbar {
+    display: none; align-items: center; gap: 6px;
+    padding: 6px 12px; background: var(--toolbar-bg);
+    border-top: 1px solid var(--border); font-size: 13px;
+  }
+  #searchbar.show { display: flex; }
+  #searchbar input {
+    padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg); color: var(--fg); font-family: inherit;
+  }
+  #statusbar {
+    padding: 3px 12px; font-size: 12px; color: var(--accent);
+    background: var(--toolbar-bg); border-top: 1px solid var(--border);
+  }
+  #searchStatus { color: var(--accent); margin-left: 6px; }
+
+  #bookmarkPanel {
+    display: none; position: absolute; top: 100%; right: 12px;
+    width: 300px; max-height: 360px; overflow-y: auto;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    z-index: 20; padding: 6px 0;
+  }
+  #bookmarkPanel.show { display: block; }
+  #bookmarkPanel .bm-empty { padding: 12px; color: var(--accent); font-size: 13px; text-align: center; }
+  .bm-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; font-size: 13px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  .bm-item:hover { background: var(--toolbar-bg); }
+  .bm-item .bm-line { color: var(--accent); font-size: 11px; white-space: nowrap; }
+  .bm-item .bm-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bm-item .bm-del { border: none; background: none; color: var(--accent); padding: 0 4px; }
+  .bm-item .bm-del:hover { background: #c0392b; color: #fff; border-radius: 3px; }
+</style>
+</head>
+<body data-theme="sepia">
+
+<div id="toolbar">
+  <button id="openBtn">📂 開啟檔案</button>
+  <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none">
+
+  <label>字型：
+    <select id="fontFamily">
+      <option value="'Microsoft JhengHei', sans-serif">微軟正黑體</option>
+      <option value="'DFKai-SB', '標楷體', serif">標楷體</option>
+      <option value="'PMingLiU', '新細明體', serif">新細明體</option>
+      <option value="Consolas, monospace">Consolas</option>
+      <option value="Georgia, serif">Georgia</option>
+    </select>
+  </label>
+
+  <label>字級：
+    <button id="fontMinus">－</button>
+    <input type="range" id="fontSize" min="12" max="48" value="18">
+    <button id="fontPlus">＋</button>
+    <span id="fontSizeLabel">18px</span>
+  </label>
+
+  <label>行距：
+    <input type="range" id="lineHeight" min="10" max="30" value="18">
+  </label>
+
+  <label>主題：
+    <select id="theme">
+      <option value="sepia">護眼米色</option>
+      <option value="white">白底黑字</option>
+      <option value="dark">深色模式</option>
+    </select>
+  </label>
+
+  <span class="spacer"></span>
+  <button id="addBookmarkBtn" title="在目前閱讀位置加入書籤 (Ctrl+D)">🔖 加入書籤</button>
+  <button id="bookmarkListBtn" title="書籤清單 (Ctrl+B)">📑 書籤清單</button>
+  <button id="searchBtn">🔍 搜尋 (Ctrl+F)</button>
+  <button id="fullscreenBtn">⛶ 全螢幕</button>
+
+  <div id="bookmarkPanel"></div>
+</div>
+
+<div id="dropzone">
+  <div id="placeholder">
+    <div style="font-size:40px">📄</div>
+    <div>拖曳 .txt 檔案到這裡，或點左上角「開啟檔案」</div>
+  </div>
+  <div id="content" class="hidden"></div>
+</div>
+
+<div id="searchbar">
+  搜尋：<input type="text" id="searchInput" placeholder="輸入關鍵字...">
+  <button id="searchPrev">上一個</button>
+  <button id="searchNext">下一個</button>
+  <button id="searchClose">關閉</button>
+  <span id="searchStatus"></span>
+</div>
+
+<div id="statusbar">請開啟一個 txt 檔案</div>
+
+<script>
+(function () {
+  const el = {
+    openBtn: document.getElementById('openBtn'),
+    fileInput: document.getElementById('fileInput'),
+    fontFamily: document.getElementById('fontFamily'),
+    fontSize: document.getElementById('fontSize'),
+    fontSizeLabel: document.getElementById('fontSizeLabel'),
+    fontMinus: document.getElementById('fontMinus'),
+    fontPlus: document.getElementById('fontPlus'),
+    lineHeight: document.getElementById('lineHeight'),
+    theme: document.getElementById('theme'),
+    fullscreenBtn: document.getElementById('fullscreenBtn'),
+    content: document.getElementById('content'),
+    placeholder: document.getElementById('placeholder'),
+    statusbar: document.getElementById('statusbar'),
+    searchBtn: document.getElementById('searchBtn'),
+    searchbar: document.getElementById('searchbar'),
+    searchInput: document.getElementById('searchInput'),
+    searchPrev: document.getElementById('searchPrev'),
+    searchNext: document.getElementById('searchNext'),
+    searchClose: document.getElementById('searchClose'),
+    searchStatus: document.getElementById('searchStatus'),
+    dropzone: document.getElementById('dropzone'),
+    addBookmarkBtn: document.getElementById('addBookmarkBtn'),
+    bookmarkListBtn: document.getElementById('bookmarkListBtn'),
+    bookmarkPanel: document.getElementById('bookmarkPanel'),
+  };
+
+  const SETTINGS_KEY = 'txt-reader-settings';
+  const BOOKMARKS_KEY = 'txt-reader-bookmarks';
+  const defaults = { fontFamily: el.fontFamily.value, fontSize: 18, lineHeight: 1.8, theme: 'sepia' };
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? Object.assign({}, defaults, JSON.parse(raw)) : defaults;
+    } catch (e) { return defaults; }
+  }
+  function saveSettings(s) {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) {}
+  }
+
+  let settings = loadSettings();
+
+  function applySettings() {
+    el.content.style.fontFamily = settings.fontFamily;
+    el.content.style.fontSize = settings.fontSize + 'px';
+    el.content.style.lineHeight = settings.lineHeight;
+    document.body.setAttribute('data-theme', settings.theme);
+
+    el.fontFamily.value = settings.fontFamily;
+    el.fontSize.value = settings.fontSize;
+    el.fontSizeLabel.textContent = settings.fontSize + 'px';
+    el.lineHeight.value = Math.round(settings.lineHeight * 10);
+    el.theme.value = settings.theme;
+  }
+  applySettings();
+
+  function setFontSize(v) {
+    settings.fontSize = Math.max(12, Math.min(48, v));
+    applySettings(); saveSettings(settings);
+  }
+
+  el.fontFamily.addEventListener('change', () => { settings.fontFamily = el.fontFamily.value; applySettings(); saveSettings(settings); });
+  el.fontSize.addEventListener('input', () => setFontSize(parseInt(el.fontSize.value, 10)));
+  el.fontMinus.addEventListener('click', () => setFontSize(settings.fontSize - 1));
+  el.fontPlus.addEventListener('click', () => setFontSize(settings.fontSize + 1));
+  el.lineHeight.addEventListener('input', () => { settings.lineHeight = parseInt(el.lineHeight.value, 10) / 10; applySettings(); saveSettings(settings); });
+  el.theme.addEventListener('change', () => { settings.theme = el.theme.value; applySettings(); saveSettings(settings); });
+
+  el.content.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) { e.preventDefault(); setFontSize(settings.fontSize + (e.deltaY < 0 ? 1 : -1)); }
+  }, { passive: false });
+
+  // ---- 開檔／編碼偵測 ----
+  const ENCODINGS = ['utf-8', 'big5', 'gbk', 'gb18030'];
+  let currentFileKey = null; // 目前檔案的書籤索引鍵
+
+  function decodeBuffer(buffer) {
+    for (const enc of ENCODINGS) {
+      try {
+        const decoder = new TextDecoder(enc, { fatal: false });
+        const text = decoder.decode(buffer);
+        const badRatio = (text.match(/�/g) || []).length / Math.max(text.length, 1);
+        if (badRatio < 0.01) return text;
+      } catch (e) { /* 瀏覽器可能不支援此編碼，跳過 */ }
+    }
+    return new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+  }
+
+  function renderLines(text) {
+    el.content.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    text.split('\n').forEach((line, i) => {
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.dataset.line = i;
+      div.textContent = line;
+      frag.appendChild(div);
+    });
+    el.content.appendChild(frag);
+  }
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = decodeBuffer(reader.result);
+      renderLines(text);
+      el.content.classList.remove('hidden');
+      el.placeholder.classList.add('hidden');
+      const lines = text.split('\n').length;
+      el.statusbar.textContent = `${file.name}　｜　共 ${lines} 行　｜　${(file.size / 1024).toFixed(1)} KB`;
+      document.title = `TXT 閱讀器 － ${file.name}`;
+      currentFileKey = `${file.name}|${file.size}|${file.lastModified}`;
+      markBookmarkedLines();
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  el.openBtn.addEventListener('click', () => el.fileInput.click());
+  el.fileInput.addEventListener('change', (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+  ['dragover'].forEach(ev => el.dropzone.addEventListener(ev, (e) => { e.preventDefault(); }));
+  el.dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  });
+
+  // ---- 全螢幕 ----
+  el.fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  });
+
+  // ---- 書籤 ----
+  function loadAllBookmarks() {
+    try {
+      const raw = localStorage.getItem(BOOKMARKS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveAllBookmarks(all) {
+    try { localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(all)); } catch (e) {}
+  }
+  function getBookmarksForCurrentFile() {
+    if (!currentFileKey) return [];
+    const all = loadAllBookmarks();
+    return all[currentFileKey] || [];
+  }
+  function markBookmarkedLines() {
+    const lines = el.content.querySelectorAll('.line');
+    lines.forEach(l => l.classList.remove('bookmarked'));
+    getBookmarksForCurrentFile().forEach(b => {
+      const target = el.content.querySelector(`.line[data-line="${b.line}"]`);
+      if (target) target.classList.add('bookmarked');
+    });
+  }
+  function getTopVisibleLine() {
+    const lines = el.content.querySelectorAll('.line');
+    const containerTop = el.content.getBoundingClientRect().top;
+    for (const line of lines) {
+      if (line.getBoundingClientRect().bottom > containerTop + 1) {
+        return parseInt(line.dataset.line, 10);
+      }
+    }
+    return 0;
+  }
+  function addBookmark() {
+    if (!currentFileKey) { el.statusbar.textContent = '請先開啟一個檔案再加入書籤'; return; }
+    const lineNo = getTopVisibleLine();
+    const lineEl = el.content.querySelector(`.line[data-line="${lineNo}"]`);
+    const text = lineEl ? lineEl.textContent.trim() : '';
+    const label = text ? (text.length > 20 ? text.slice(0, 20) + '…' : text) : '（空白行）';
+    const all = loadAllBookmarks();
+    const list = all[currentFileKey] || [];
+    if (list.some(b => b.line === lineNo)) {
+      el.statusbar.textContent = '這個位置已經有書籤了';
+      return;
+    }
+    list.push({ line: lineNo, label, addedAt: Date.now() });
+    list.sort((a, b) => a.line - b.line);
+    all[currentFileKey] = list;
+    saveAllBookmarks(all);
+    markBookmarkedLines();
+    el.statusbar.textContent = `已在第 ${lineNo + 1} 行加入書籤：${label}`;
+  }
+  function deleteBookmark(lineNo) {
+    const all = loadAllBookmarks();
+    const list = (all[currentFileKey] || []).filter(b => b.line !== lineNo);
+    all[currentFileKey] = list;
+    saveAllBookmarks(all);
+    markBookmarkedLines();
+    renderBookmarkPanel();
+  }
+  function jumpToLine(lineNo) {
+    const target = el.content.querySelector(`.line[data-line="${lineNo}"]`);
+    if (target) target.scrollIntoView({ block: 'start' });
+    closeBookmarkPanel();
+  }
+  function renderBookmarkPanel() {
+    const list = getBookmarksForCurrentFile();
+    el.bookmarkPanel.innerHTML = '';
+    if (!list.length) {
+      const empty = document.createElement('div');
+      empty.className = 'bm-empty';
+      empty.textContent = currentFileKey ? '尚未加入任何書籤' : '請先開啟檔案';
+      el.bookmarkPanel.appendChild(empty);
+      return;
+    }
+    list.forEach(b => {
+      const item = document.createElement('div');
+      item.className = 'bm-item';
+      const lineSpan = document.createElement('span');
+      lineSpan.className = 'bm-line';
+      lineSpan.textContent = `第 ${b.line + 1} 行`;
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'bm-label';
+      labelSpan.textContent = b.label;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'bm-del';
+      delBtn.textContent = '✕';
+      delBtn.title = '刪除書籤';
+      delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteBookmark(b.line); });
+      item.appendChild(lineSpan);
+      item.appendChild(labelSpan);
+      item.appendChild(delBtn);
+      item.addEventListener('click', () => jumpToLine(b.line));
+      el.bookmarkPanel.appendChild(item);
+    });
+  }
+  function toggleBookmarkPanel() {
+    if (el.bookmarkPanel.classList.contains('show')) { closeBookmarkPanel(); return; }
+    renderBookmarkPanel();
+    el.bookmarkPanel.classList.add('show');
+  }
+  function closeBookmarkPanel() { el.bookmarkPanel.classList.remove('show'); }
+
+  el.addBookmarkBtn.addEventListener('click', addBookmark);
+  el.bookmarkListBtn.addEventListener('click', toggleBookmarkPanel);
+  document.addEventListener('click', (e) => {
+    if (el.bookmarkPanel.classList.contains('show') &&
+        !el.bookmarkPanel.contains(e.target) && e.target !== el.bookmarkListBtn) {
+      closeBookmarkPanel();
+    }
+  });
+
+  // ---- 搜尋 ----
+  let matches = [];
+  let matchIndex = -1;
+
+  function openSearch() {
+    el.searchbar.classList.add('show');
+    el.searchInput.focus();
+    el.searchInput.select();
+  }
+  function clearHighlights() {
+    el.content.querySelectorAll('.line').forEach(line => {
+      if (line.querySelector('mark.hl')) line.textContent = line.textContent;
+    });
+  }
+  function closeSearch() {
+    el.searchbar.classList.remove('show');
+    el.content.querySelectorAll('mark.hl').forEach(m => {
+      const parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+    matches = []; matchIndex = -1;
+    el.searchStatus.textContent = '';
+  }
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function runSearch() {
+    closeSearchHighlightsOnly();
+    const keyword = el.searchInput.value;
+    matches = []; matchIndex = -1;
+    if (!keyword) { el.searchStatus.textContent = ''; return; }
+    const re = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    el.content.querySelectorAll('.line').forEach(lineEl => {
+      const text = lineEl.textContent;
+      if (!re.test(text)) return;
+      re.lastIndex = 0;
+      const html = escapeHtml(text).replace(re, m => `<mark class="hl">${m}</mark>`);
+      lineEl.innerHTML = html;
+    });
+    matches = Array.from(el.content.querySelectorAll('mark.hl'));
+    if (matches.length) { matchIndex = 0; gotoMatch(); }
+    else el.searchStatus.textContent = '找不到符合的結果';
+  }
+  function closeSearchHighlightsOnly() {
+    el.content.querySelectorAll('mark.hl').forEach(m => {
+      const parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+  function gotoMatch() {
+    matches.forEach(m => m.classList.remove('current'));
+    if (!matches.length) return;
+    const m = matches[matchIndex];
+    m.classList.add('current');
+    m.scrollIntoView({ block: 'center' });
+    el.searchStatus.textContent = `第 ${matchIndex + 1} / ${matches.length} 筆`;
+  }
+  el.searchBtn.addEventListener('click', openSearch);
+  el.searchClose.addEventListener('click', closeSearch);
+  el.searchInput.addEventListener('input', runSearch);
+  el.searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); if (matches.length) { matchIndex = (matchIndex + 1) % matches.length; gotoMatch(); } }
+    if (e.key === 'Escape') closeSearch();
+  });
+  el.searchNext.addEventListener('click', () => { if (matches.length) { matchIndex = (matchIndex + 1) % matches.length; gotoMatch(); } });
+  el.searchPrev.addEventListener('click', () => { if (matches.length) { matchIndex = (matchIndex - 1 + matches.length) % matches.length; gotoMatch(); } });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key.toLowerCase() === 'f') { e.preventDefault(); openSearch(); }
+    if (e.ctrlKey && e.key.toLowerCase() === 'd') { e.preventDefault(); addBookmark(); }
+    if (e.ctrlKey && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleBookmarkPanel(); }
+    if (e.key === 'F11') { e.preventDefault(); el.fullscreenBtn.click(); }
+    if (e.key === 'Escape' && !el.searchbar.classList.contains('show') && document.fullscreenElement) document.exitFullscreen();
+  });
+})();
+</script>
+</body>
+</html>
